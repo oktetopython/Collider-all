@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>
+#include <sstream> // Required for std::stringstream
 
 inline bool hex_to_bytes(const std::string& hex_key, unsigned char* out_key, size_t key_len) {
     if (hex_key.length() != key_len * 2) {
@@ -29,6 +30,15 @@ inline bool hex_to_bytes(const std::string& hex_key, unsigned char* out_key, siz
 
 inline std::string get_utility_message() {
     return "Utility message from utils.hpp!";
+}
+
+inline std::string bytes_to_hex(const unsigned char* bytes, size_t len) {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (size_t i = 0; i < len; ++i) {
+        ss << std::setw(2) << static_cast<unsigned int>(bytes[i]);
+    }
+    return ss.str();
 }
 
 #endif // UTILS_HPP
