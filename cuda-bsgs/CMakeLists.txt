@@ -8,12 +8,36 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Option to build with CUDA
 option(BUILD_WITH_CUDA "Enable CUDA compilation" OFF)
+option(WITH_NVML_MONITORING "Enable NVML for GPU temperature monitoring" OFF)
 
 if(BUILD_WITH_CUDA)
     find_package(CUDA REQUIRED) # Find CUDA only if we intend to use it
     if(NOT CUDA_FOUND)
         message(WARNING "BUILD_WITH_CUDA is ON but CUDA toolkit not found. Disabling CUDA.")
         set(BUILD_WITH_CUDA OFF) # Force off if not found
+    else()
+        # NVML Setup (only if CUDA is found and NVML monitoring is requested)
+        if(WITH_NVML_MONITORING)
+            message(STATUS "WITH_NVML_MONITORING is ON. Attempting to find NVML.")
+            if(WIN32)
+                set(NVML_LIBRARY_NAME "nvml")
+            else()
+                set(NVML_LIBRARY_NAME "nvidia-ml")
+            endif()
+
+            find_library(NVML_LIBRARY NAMES ${NVML_LIBRARY_NAME})
+            find_path(NVML_INCLUDE_DIR NAMES nvml.h)
+
+            if(NVML_LIBRARY AND NVML_INCLUDE_DIR)
+                message(STATUS "NVML found: Library=${NVML_LIBRARY}, Include=${NVML_INCLUDE_DIR}")
+                # NVML components will be added to the target further down if BUILD_WITH_CUDA is confirmed.
+            else()
+                message(WARNING "NVML library or headers not found. Disabling NVML monitoring.")
+                set(WITH_NVML_MONITORING OFF CACHE BOOL "NVML components not found, force disable" FORCE)
+            endif()
+        else()
+            message(STATUS "NVML monitoring disabled by option.")
+        endif()
     endif()
 endif()
 
@@ -36,6 +60,14 @@ if(BUILD_WITH_CUDA)
 
     # Using modern CMake targets for CUDA
     target_link_libraries(cudabsgs PRIVATE CUDA::cudart)
+
+    # Add NVML if found and enabled
+    if(WITH_NVML_MONITORING AND NVML_LIBRARY AND NVML_INCLUDE_DIR)
+      message(STATUS "Enabling NVML for target cudabsgs.")
+      target_include_directories(cudabsgs PRIVATE ${NVML_INCLUDE_DIR})
+      target_link_libraries(cudabsgs PRIVATE ${NVML_LIBRARY})
+      target_compile_definitions(cudabsgs PRIVATE WITH_NVML)
+    endif()
 
 else()
     message(STATUS "CUDA compilation DISABLED. Building C++ only version (cudabsgs).")
