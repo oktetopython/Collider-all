@@ -33,19 +33,45 @@ void log_message(LogLevel level, const std::string& message) { /* ... same ... *
 struct ProfileParams { int w_param=0; int htsz_param_mb=0; int conceptual_threads_per_block=0; int conceptual_blocks_factor=0; bool loaded=false;};
 struct GpuProfile { std::string name; int matches_sm_major=0; ProfileParams params;};
 std::vector<GpuProfile> available_profiles;
-enum cudaError_t { cudaSuccess = 0, cudaErrorMemoryAllocation, cudaErrorInvalidValue, cudaErrorSetDeviceFailed, cudaErrorNotYetImplemented };
-const char* cudaGetErrorString(cudaError_t err) { switch(err){case cudaSuccess:return "cudaSuccess";default:return "Unknown";}}
-struct cudaDeviceProp { char name[256]; size_t totalGlobalMem; int major; int minor; int multiProcessorCount; };
-std::vector<cudaDeviceProp> mock_gpu_props; int mock_gpu_count = 0;
 
 #ifndef BUILD_WITH_CUDA
-int current_mock_device_id_stub = -1; // Used by cudaMemGetInfo stub
-#endif
+// This block contains stub definitions for CUDA API functions, types, and related globals
+// It is excluded when compiling with nvcc for a real CUDA build (BUILD_WITH_CUDA is defined).
+enum cudaError_t {
+    cudaSuccess = 0,
+    cudaErrorMemoryAllocation,
+    cudaErrorInvalidValue,
+    cudaErrorSetDeviceFailed,
+    cudaErrorNotYetImplemented
+    // Add other enum values as needed by stubs or if they are part of a minimal API surface
+};
+const char* cudaGetErrorString(cudaError_t err) {
+    switch(err){
+        case cudaSuccess:return "cudaSuccess (stub)";
+        case cudaErrorMemoryAllocation: return "cudaErrorMemoryAllocation (stub)";
+        case cudaErrorInvalidValue: return "cudaErrorInvalidValue (stub)";
+        case cudaErrorSetDeviceFailed: return "cudaErrorSetDeviceFailed (stub)";
+        case cudaErrorNotYetImplemented: return "cudaErrorNotYetImplemented (stub)";
+        default:return "Unknown CUDA error (stub)";
+    }
+}
+struct cudaDeviceProp {
+    char name[256];
+    size_t totalGlobalMem;
+    int major;
+    int minor;
+    int multiProcessorCount;
+};
+std::vector<cudaDeviceProp> mock_gpu_props;
+int mock_gpu_count = 0;
+// Note: current_mock_device_id_stub is defined further down, already guarded.
 
 std::default_random_engine random_generator(std::chrono::system_clock::now().time_since_epoch().count());
-std::uniform_int_distribution<int> temp_dist(40, 80);
-void initialize_mock_gpus(int count) { /* ... same ... */
-    mock_gpu_count = count; mock_gpu_props.clear();
+std::uniform_int_distribution<int> temp_dist(40, 80); // Used by initialize_mock_gpus
+
+void initialize_mock_gpus(int count) {
+    mock_gpu_count = count;
+    mock_gpu_props.clear();
     int cc_majors[] = {7,7,8,8,9}; int cc_minors[] = {0,5,0,6,0}; int sm_counts[]={20,28,68,82,128};
     int cc_cycle_len = sizeof(cc_majors)/sizeof(int);
     for(int i=0;i<count;++i){cudaDeviceProp p;snprintf(p.name,sizeof(p.name),"MockGPU-%d-SM%d.%d",i,cc_majors[i%cc_cycle_len],cc_minors[i%cc_cycle_len]);p.totalGlobalMem=(1024ULL*1024*1024)*(8+i%2);p.major=cc_majors[i%cc_cycle_len];p.minor=cc_minors[i%cc_cycle_len];p.multiProcessorCount=sm_counts[i%cc_cycle_len];mock_gpu_props.push_back(p);}
@@ -57,22 +83,62 @@ cudaError_t cudaSetDevice(int device) {
     if(device<0||device>=mock_gpu_count) return cudaErrorSetDeviceFailed;
     log_message(LOG_DEBUG,"[CUDA STUB] Set active device to "+std::to_string(device));
     #ifndef BUILD_WITH_CUDA
-    current_mock_device_id_stub = device;
+    current_mock_device_id_stub = device; // This specific global is fine, it's declared in its own #ifndef
+    // The function definition itself is part of the stub API.
     #endif
     return cudaSuccess;
 }
 
+cudaError_t cudaMalloc(void** devPtr, size_t size) {
+    *devPtr=malloc(size);
+    log_message(LOG_DEBUG,"[CUDA STUB] cudaMalloc "+std::to_string(size)+" bytes. Ptr: "+(*devPtr?"non-null":"NULL"));
+    return(*devPtr!=nullptr||size==0)?cudaSuccess:cudaErrorMemoryAllocation;
+}
+
+enum cudaMemcpyKind { // This enum is part of CUDA API
+    cudaMemcpyHostToDevice,
+    cudaMemcpyDeviceToHost
+    // Add cudaMemcpyDeviceToDevice, cudaMemcpyDefault as needed
+};
+
+cudaError_t cudaMemcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind) {
+    memcpy(dst,src,count);
+    log_message(LOG_DEBUG,"[CUDA STUB] cudaMemcpy called. Kind: " + std::to_string(kind));
+    return cudaSuccess;
+}
+
+cudaError_t cudaFree(void* devPtr) {
+    if(devPtr)free(devPtr);
+    log_message(LOG_DEBUG,"[CUDA STUB] cudaFree called.");
+    return cudaSuccess;
+}
+
+cudaError_t cudaDeviceSynchronize() {
+    log_message(LOG_DEBUG,"[CUDA STUB] cudaDeviceSynchronize called.");
+    return cudaSuccess;
+}
+
+#endif // BUILD_WITH_CUDA (End of large stub block)
+
+
+// This current_mock_device_id_stub is used by cudaMemGetInfo stub,
+// which is also guarded by #ifndef BUILD_WITH_CUDA.
+// It's defined globally for convenience if cudaMemGetInfo is called outside main stub block.
+#ifndef BUILD_WITH_CUDA
+int current_mock_device_id_stub = -1;
+#endif
+
+// cudaMemGetInfo is already individually guarded, which is fine.
+// If it were not, it should be included in the large block above.
 #ifndef BUILD_WITH_CUDA
 cudaError_t cudaMemGetInfo(size_t* free_mem, size_t* total_mem) {
     if (!free_mem || !total_mem) return cudaErrorInvalidValue;
     if (current_mock_device_id_stub >= 0 && current_mock_device_id_stub < mock_gpu_count) {
         *total_mem = mock_gpu_props[current_mock_device_id_stub].totalGlobalMem;
-        // Simulate some memory usage, leave 90% free for testing purposes
         *free_mem = static_cast<size_t>(static_cast<double>(*total_mem) * 0.90);
     } else {
-        // Fallback if no device set or invalid device ID
-        *total_mem = 8ULL * 1024 * 1024 * 1024; // Default to 8GB total
-        *free_mem = static_cast<size_t>(static_cast<double>(*total_mem) * 0.90);  // Default to 90% of 8GB free
+        *total_mem = 8ULL * 1024 * 1024 * 1024;
+        *free_mem = static_cast<size_t>(static_cast<double>(*total_mem) * 0.90);
         log_message(LOG_DEBUG, "[CUDA STUB] cudaMemGetInfo: current_mock_device_id_stub ("+ std::to_string(current_mock_device_id_stub) +") is invalid or no device set, using default fallback values.");
     }
     log_message(LOG_DEBUG, "[CUDA STUB] cudaMemGetInfo for effective device " + std::to_string(current_mock_device_id_stub) +
@@ -81,11 +147,8 @@ cudaError_t cudaMemGetInfo(size_t* free_mem, size_t* total_mem) {
 }
 #endif
 
-cudaError_t cudaMalloc(void** devPtr, size_t size) { *devPtr=malloc(size);log_message(LOG_DEBUG,"[CUDA STUB] cudaMalloc "+std::to_string(size)+" bytes. Ptr: "+(*devPtr?"non-null":"NULL"));return(*devPtr!=nullptr||size==0)?cudaSuccess:cudaErrorMemoryAllocation;}
-enum cudaMemcpyKind {cudaMemcpyHostToDevice, cudaMemcpyDeviceToHost};
-cudaError_t cudaMemcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind) { memcpy(dst,src,count);return cudaSuccess;}
-cudaError_t cudaFree(void* devPtr) { if(devPtr)free(devPtr);log_message(LOG_DEBUG,"[CUDA STUB] cudaFree called.");return cudaSuccess;}
-cudaError_t cudaDeviceSynchronize() { return cudaSuccess; }
+// launch_bsgs_kernel_stub is NOT a CUDA API stub, it's a specific helper for this project.
+// So it should remain outside the #ifndef BUILD_WITH_CUDA block for stubs.
 void launch_bsgs_kernel_stub(int,const unsigned char*,unsigned long long,unsigned long long,void*,size_t,bool*,unsigned char*,int&);
 struct BabyStepEntry { unsigned char point_representation[32]; unsigned long long k_value; };
 struct AppConfig {
