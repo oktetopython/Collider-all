@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(CudaBSGS CXX CUDA) # Added CUDA language back
+enable_language(CUDA) # Explicitly enable CUDA language support
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -58,8 +59,11 @@ if(BUILD_WITH_CUDA)
     set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
     message(STATUS "Targeting CUDA Architectures: ${CMAKE_CUDA_ARCHITECTURES}")
 
-    # Using modern CMake targets for CUDA
-    target_link_libraries(cudabsgs PRIVATE CUDA::cudart)
+    # Ensure CUDA include directories are added
+    target_include_directories(cudabsgs PRIVATE ${CUDA_INCLUDE_DIRS})
+
+    # Link CUDA libraries using the variable
+    target_link_libraries(cudabsgs PRIVATE ${CUDA_LIBRARIES})
 
     # Add NVML if found and enabled
     if(WITH_NVML_MONITORING AND NVML_LIBRARY AND NVML_INCLUDE_DIR)
