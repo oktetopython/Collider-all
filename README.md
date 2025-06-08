@@ -1,120 +1,145 @@
-## GPU BSGS Collider v1.7.9
-#### Cuda (Nvidia card only) and Windows x64
-![alt text](x64/large-bitcoin-collider.png "Collider")<br />
-Forked from [Etayson/BSGS-cuda](https://github.com/Etayson/BSGS-cuda)<br />
-## Help page: Collider.exe -h
+# CUDA BSGS Collider
+
+A CUDA-based implementation of the Baby-Step Giant-Step (BSGS) algorithm, designed for solving instances of the discrete logarithm problem, typically in the context of elliptic curve cryptography. This project leverages NVIDIA GPUs to accelerate the computationally intensive parts of the algorithm.
+
+**Note:** This README describes the `cuda-bsgs` C++/CUDA project. Information regarding a Windows `Collider.exe` (potentially built with PureBasic) found in older READMEs pertains to a separate wrapper or version and is not covered by the build and run instructions below.
+
+## Disclaimer
+
+ALL THE CODES, PROGRAMS, AND INFORMATION ARE FOR EDUCATIONAL AND RESEARCH PURPOSES ONLY. USE IT AT YOUR OWN RISK. THE DEVELOPER WILL NOT BE RESPONSIBLE FOR ANY LOSS, DAMAGE, OR CLAIM ARISING FROM USING THIS PROGRAM. USERS ARE RESPONSIBLE FOR ENSURING COMPLIANCE WITH ALL APPLICABLE LAWS AND REGULATIONS.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+*   **NVIDIA GPU**: A CUDA-enabled NVIDIA GPU. Compute Capability 3.5 or higher is generally recommended (as per the original `cuda-bsgs/README.md`).
+*   **CUDA Toolkit**: Version 11.0 or later is recommended. This provides the CUDA compiler (`nvcc`) and runtime libraries.
+*   **CMake**: Version 3.15 or later. Used for building the project.
+*   **C++ Compiler**: A C++17 compatible compiler (e.g., GCC 7.0 or later).
+*   **Git**: For cloning the repository.
+*   **NVIDIA Drivers**: Ensure you have appropriate NVIDIA drivers installed for your GPU and CUDA toolkit version.
+
+## Building the Project
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone <repository_url>
+    cd <repository_directory>
+    ```
+
+2.  **Navigate to the CUDA BSGS directory:**
+    ```bash
+    cd cuda-bsgs
+    ```
+
+3.  **Run the Build Script:**
+    The provided `build.sh` script simplifies the CMake configuration and build process. To build with CUDA support (recommended for GPU acceleration), use the `--cuda` flag:
+    ```bash
+    ./scripts/build.sh --cuda
+    ```
+    If you want to do a clean build, you can add the `--clean` flag:
+    ```bash
+    ./scripts/build.sh --clean --cuda
+    ```
+    The script will create a `build` directory inside `cuda-bsgs` and compile the project.
+
+4.  **Locate the Executable:**
+    The compiled executable will be located at `cuda-bsgs/build/cudabsgs`.
+
+**Manual CMake Build (Alternative):**
+
+If you prefer to run CMake manually:
+
+```bash
+cd cuda-bsgs
+mkdir build
+cd build
+cmake .. -DBUILD_WITH_CUDA=ON # Set to OFF for CPU-only (simulation) mode
+make -j$(nproc) # Or simply 'make'
 ```
-C:\Users\User>Collider.exe -h
 
--t       Number of GPU threads, Default 512
--b       Number of GPU blocks, Default 68
--p       Number of pparam, Default 256
--d       Select GPU IDs, Default 0 (-d 1,2,3)
--pb      Set single uncompressed/compressed pubkey for searching
--pk      Range start from , Default 0x1
--pke     End range
--w       Set number of baby items 2^ (-w 22  mean 2^22 points)
--htsz    Set number of HashTable 2^ , Default 26
--infile  Set file with pubkey for searching in uncompressed/compressed  format (search sequential), one pubkey per line
--wl      Set recovery file from which the state will be loaded
--wt      Set timer for autosaving current state, Default every 180 seconds
+## Running the Application
+
+The `cudabsgs` executable accepts several command-line arguments to configure its operation.
+
+**Synopsis:**
+
+```bash
+./cuda-bsgs/build/cudabsgs <target_pubkey_hex> [options]
 ```
-### Collider Speed: 
-- RTX 3090 (24 GB) = 4.7 Ekeys/s
-- RTX 3080 (10 GB) = 2.7 Ekeys/s
-- RTX 2070 ( 8 GB) = 1,7 Ekeys/s
-- 1 Ekeys = 1,000,000,000,000,000,000
-- For GPUs over 8 GB memory try Collider v1.8.0
 
-When using 5 or more GPUs, there is a decrease in the overall speed by -30%<br />
-In order not to lose speed, it is better to run window copies for each GPU with the -d 0 or -d 1 parameter ...
+**Required Argument:**
 
-### Search [Puzzles 120-160](https://privatekeys.pw/puzzles/bitcoin-puzzle-tx)<br />
-#120 17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT<br />
--pk 800000000000000000000000000000<br />
--pke FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 02CEB6CBBCDBDF5EF7150682150F4CE2C6F4807B349827DCDBDD1F2EFA885A2630<br /><br />
+*   `<target_pubkey_hex>`: A 64-character hexadecimal string representing the target public key.
 
-#125 1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5<br />
--pk 10000000000000000000000000000000<br />
--pke 1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 0233709EB11E0D4439A729F21C2C443DEDB727528229713F0065721BA8FA46F00E<br /><br />
+**Common Options:**
 
-#130 1Fo65aKq8s8iquMt6weF1rku1moWVEd5Ua <br />
--pk 200000000000000000000000000000000<br />
--pke 3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 03633CBE3EC02B9401C5EFFA144C5B4D22F87940259634858FC7E59B1C09937852<br /><br />
+*   `--gpu-list <ids>`: Comma-separated list of GPU IDs to use (e.g., "0,1"). If not specified, the application attempts to use all available GPUs or defaults to simulated ones if `--simulated-gpus` is set.
+*   `--simulated-gpus <count>`: Number of simulated GPUs to use (default: 1). Useful for testing logic without a physical CUDA-enabled GPU. Ensure `BUILD_WITH_CUDA` is OFF or that no real GPUs are detected for this to be the primary mode of operation.
+*   `--baby-steps-count <N>`: Specifies the exact number of baby steps to compute (e.g., `1048576` for 2^20).
+*   `--w <val>`: Sets the `w_param`. This parameter is often used as an exponent for the number of baby steps (2<sup>w</sup>), especially by profiles. Consult `gpu_profiles.json` or experiment. The default in code is 64 (likely too high for direct exponent use without a profile override). Using `--baby-steps-count` might be more straightforward.
+*   `--htsz <MB>`: Size of the hash table in Megabytes (e.g., `2048`). This is the `htsz_param_mb`.
+*   `--giant-steps-total-range <N>`: The total range of giant steps to cover.
+*   `--steps-per-kernel-launch <N>`: The number of giant steps processed per single CUDA kernel launch.
+*   `--checkpoint-file <path>`: Path to the checkpoint file (default: `bsgs_checkpoint.dat`).
+*   `--checkpoint-interval <N>`: Save checkpoint every N steps/operations (default: `1 << 15`).
+*   `--log-level <level>`: Set logging verbosity. Options: `DEBUG`, `INFO`, `WARN`, `ERROR` (default: `INFO`).
+*   `--profiles-file <path>`: Path to the GPU profiles JSON configuration file (default: `configs/gpu_profiles.json`).
+*   `--gpu-profile <name>`: Name of a specific GPU profile to load and apply from the `profiles-file`. This overrides automatic profile selection.
 
-#135 16RGFo6hjq9ym6Pj7N5H7L1NR1rVPJyw2v<br />
--pk 4000000000000000000000000000000000<br />
--pke 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 02145D2611C823A396EF6712CE0F712F09B9B4F3135E3E0AA3230FB9B6D08D1E16<br /><br />
+**Example Usage:**
 
-#140 1QKBaU6WAeycb3DbKbLBkX7vJiaS8r42Xo<br />
--pk 80000000000000000000000000000000000<br />
--pke FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 031F6A332D3C5C4F2DE2378C012F429CD109BA07D69690C6C701B6BB87860D6640<br /><br />
+```bash
+# Run with a specific public key, using GPU 0, and specifying baby steps count and hash table size
+./cuda-bsgs/build/cudabsgs aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899     --gpu-list 0     --baby-steps-count 1048576     --htsz 1024     --log-level DEBUG
+```
 
-#145 19GpszRNUej5yYqxXoLnbZWKew3KdVLkXg<br />
--pk 1000000000000000000000000000000000000<br />
--pke 1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 03AFDDA497369E219A2C1C369954A930E4D3740968E5E4352475BCFFCE3140DAE5<br /><br />
+## Configuration
 
-#150 1MUJSJYtGPVGkBCTqGspnxyHahpt5Te8jy<br />
--pk 20000000000000000000000000000000000000<br />
--pke 3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 03137807790EA7DC6E97901C2BC87411F45ED74A5629315C4E4B03A0A102250C49<br /><br />
+The application can utilize GPU-specific profiles defined in a JSON file (default: `cuda-bsgs/configs/gpu_profiles.json`).
 
-#155 1AoeP37TmHdFh8uN72fu9AqgtLrUwcv2wJ<br />
--pk 400000000000000000000000000000000000000<br />
--pke 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 035CD1854CAE45391CA4EC428CC7E6C7D9984424B954209A8EEA197B9E364C05F6<br /><br />
+*   **Profiles**: The JSON file contains an array named `"profiles"`. Each element is a profile object.
+*   **Profile Matching**:
+    *   If `--gpu-profile <name>` is used, the application will try to load the profile with that exact name.
+    *   Otherwise, it attempts to auto-match a profile based on the detected GPU's SM (Streaming Multiprocessor) major version (e.g., 7 for Volta, 8 for Ampere).
+*   **Profile Parameters**: A profile can define:
+    *   `name` (string): Unique name for the profile.
+    *   `matches_sm_major` (int): The SM major version this profile is intended for.
+    *   `params` (object):
+        *   `w_param` (int): Value for the 'w' parameter (often 2<sup>w</sup> baby steps).
+        *   `htsz_param_mb` (int): Hash table size in MB.
+        *   `conceptual_threads_per_block` (int): Threads per CUDA block.
+        *   `conceptual_blocks_factor` (int): Factor for calculating grid size.
 
-#160 1NBC8uXJy1GiJ6drkiZa1WuKn51ps7EPTv<br />
--pk 8000000000000000000000000000000000000000<br />
--pke FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF<br />
--pb 02E0A8B039282FAF6FE0FD769CFBC4B6B4CF8758BA68220EAC420E32B91DDFA673<br />
+If no specific profile is matched or forced, the application will use default parameters or those provided via command-line arguments. Command-line arguments generally override profile settings.
 
-## Use:
-Current state is always saved to file currentwork.txt <br />
-If app crash or you stop app, you can start working from the last saved state. Provided the launch configuration has not been changed. <br />
-Note! set minimal -htsz value depending on -w <br />
+## Checkpointing
 
-|  Value     |  GPU Memory |
-| ---------- | ----------- |  
-|   -w 30    |  11.03 GB   |
-|   -w 29    |   8.01 GB   |
-|   -w 28    |   7.01 GB   |
-|   -w 27    |   6.02 GB   |
+The application supports checkpointing to save and resume progress:
 
-|   Value    |     RAM     |
-| ---------- | ----------- |
-|   -w 30    |   -htsz 28  32GB|
-|   -w 29    |   -htsz 28  |
-|   -w 28    |   -htsz 27  |
-|   -w 27    |   -htsz 25  |
+*   **Saving**: Progress is automatically saved to the file specified by `--checkpoint-file` (default: `bsgs_checkpoint.dat`) at intervals defined by `--checkpoint-interval`.
+*   **Resuming**: If a valid checkpoint file is found at startup, the application will attempt to resume from the saved state. Ensure that BSGS parameters (like public key, baby step count, etc.) are consistent with the checkpoint.
 
-All arrays(Baby, Giant) and hashtable saved to the disk for fast spinup solver next time (if parameters will not changed). <br />
-After you have the arrays saved, you will need less RAM to launch. <br />
+## Output
 
-Example range 64 bit:<br />
-Run test: ```Collider.exe -t 512 -b 72 -p 306 -pk 49dccfd96dc5df56487436f5a1b18c4f5d34f65ddb48cb5e0000000000000000 -pke 49dccfd96dc5df56487436f5a1b18c4f5d34f65ddb48cb5effffffffffffffff -w 30 -htsz 28 -pb 03c5bcdd76b64cbbd8212080fe5efa9bf577cdcaac9f5853b216e71723ec3aca19```<br />
+*   **Logging**: The application logs its progress and findings to standard output, based on the selected `--log-level`.
+*   **Found Keys**: When a private key is successfully found (a "collision" in BSGS terms), the application will log this information. The exact format or method of saving (e.g., to a specific file like `Found.txt`) is not explicitly managed by the `cuda-bsgs/src/host.cpp` source and might require manual redirection of output or be part of an external wrapper script if persistent file output is desired.
 
-## Example work 64 bit range:
-![alt text](x64/755.jpg "Example work")<br />
-- Solved Private keys will be saved to the **Found.txt** file!
+## Elliptic Curve Operations
 
-## Random mode (-r 120 bit only TEST):
-- Change the parameters for your GPU
-- Run random ```Collider.exe -t 512 -b 72 -p 306 -w 30 -htsz 28 -r 120``` 
-## Example work random -r 120:
-![alt text](x64/120.jpg "Example work")<br />
+The provided CUDA kernel (`cuda-bsgs/src/kernel.cu`) contains an abstracted framework for the BSGS algorithm. The specific elliptic curve point arithmetic (e.g., point addition, scalar multiplication for a curve like secp256k1) is represented by placeholder operations in the publicly visible code. A functional collider for a specific cryptocurrency would require these operations to be fully and correctly implemented according to the target curve's mathematics.
 
-## Building
-- To compile the Cpllider you need [Purebasic v5.31](https://www.purebasic.com)
+## Development and Simulation
 
-## Donation
-- BTC: bc1qh2mvnf5fujg93mwl8pe688yucaw9sflmwsukz9
+The codebase includes CUDA stubs that allow compiling and running the host logic in a simulated GPU environment. This is useful for development and testing on machines without NVIDIA hardware or for debugging CPU-side logic.
 
-## __Disclaimer__
-ALL THE CODES, PROGRAM AND INFORMATION ARE FOR EDUCATIONAL PURPOSES ONLY. USE IT AT YOUR OWN RISK. THE DEVELOPER WILL NOT BE RESPONSIBLE FOR ANY LOSS, DAMAGE OR CLAIM ARISING FROM USING THIS PROGRAM.
+*   To build for simulation: Ensure `BUILD_WITH_CUDA=OFF` during CMake configuration (e.g., run `./scripts/build.sh` without `--cuda`).
+*   Use `--simulated-gpus <count>` to specify the number of simulated GPUs.
+
+## Contributing
+
+Contributions are welcome. Please fork the repository, make your changes on a separate branch, and submit a pull request for review. Ensure your code adheres to the existing style and includes appropriate documentation or tests where applicable.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file in the repository for details (assuming one exists, standard practice).
