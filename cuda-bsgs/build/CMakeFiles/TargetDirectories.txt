@@ -1,0 +1,3 @@
+/app/cuda-bsgs/build/CMakeFiles/cudabsgs.dir
+/app/cuda-bsgs/build/CMakeFiles/edit_cache.dir
+/app/cuda-bsgs/build/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,19 @@
+2025-06-08 08:56:49 [DEBUG] Initialized 1 mock GPUs.
+2025-06-08 08:56:49 [DEBUG] Attempting to load GPU profiles from: configs/gpu_profiles.json
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_Old_GPU' (SM: 7, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_Mid_GPU' (SM: 8, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_New_GPU' (SM: 9, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Load_gpu_profiles: 3 valid profiles loaded in total.
+2025-06-08 08:56:49 [INFO]  Collider-BSGS Host Application Started.
+2025-06-08 08:56:49 [INFO]  Log level set to: DEBUG
+2025-06-08 08:56:49 [INFO]  Target Public Key (first 4 bytes): bb000000...
+[Checkpoint] Loaded from bsgs_checkpoint.dat. Resume offset 200000
+2025-06-08 08:56:49 [INFO]  Selected 1 GPU(s).
+2025-06-08 08:56:49 [DEBUG] Total profiles successfully parsed by load_gpu_profiles: 3
+2025-06-08 08:56:49 [INFO]  Processing for GPU ID 0: MockGPU-0-SM7.0 (SM 7.0)
+2025-06-08 08:56:49 [DEBUG]   Attempting to apply profile for GPU 0. Forced profile name: ''
+2025-06-08 08:56:49 [DEBUG]     Attempting AUTO-match based on SM 7
+2025-06-08 08:56:49 [DEBUG]       Checking auto-match: Profile:'Mock_Old_GPU' (SM_match:7) vs GPU SM: 7. SM_Match=T. Params_Loaded=T
+2025-06-08 08:56:49 [INFO]    GPU ID 0: Applied AUTO-MATCHED profile 'Mock_Old_GPU'
+2025-06-08 08:56:49 [INFO]      Using Profile Params: w=32, htsz_mb=1024
+2025-06-08 08:56:49 [INFO]  BSGS process completed.

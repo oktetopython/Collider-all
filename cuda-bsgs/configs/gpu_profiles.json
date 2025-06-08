@@ -1,0 +1,22 @@
+{
+  "profiles": [
+    {
+      "name": "Mock_Old_GPU",
+      "matches_sm_major": 7,
+      "comment": "Profile for older mock GPUs (e.g., SM 7.x)",
+      "params": { "w_param": 32, "htsz_param_mb": 1024, "conceptual_threads_per_block": 128, "conceptual_blocks_factor": 64 }
+    },
+    {
+      "name": "Mock_Mid_GPU",
+      "matches_sm_major": 8,
+      "comment": "Profile for mid-tier mock GPUs (e.g., SM 8.x)",
+      "params": { "w_param": 64, "htsz_param_mb": 2048, "conceptual_threads_per_block": 256, "conceptual_blocks_factor": 128 }
+    },
+    {
+      "name": "Mock_New_GPU",
+      "matches_sm_major": 9,
+      "comment": "Profile for newer mock GPUs (e.g., SM 9.x)",
+      "params": { "w_param": 96, "htsz_param_mb": 4096, "conceptual_threads_per_block": 256, "conceptual_blocks_factor": 256 }
+    }
+  ]
+}

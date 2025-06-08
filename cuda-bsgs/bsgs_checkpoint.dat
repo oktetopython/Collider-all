@@ -1,0 +1,7 @@
+current_giant_step_offset=200000
+target_pubkey_hex=aa00000000000000000000000000000000000000000000000000000000000000
+baby_steps_count=1024
+giant_steps_total_range=200000
+steps_per_kernel_launch=10000
+w_param=64
+htsz_param_mb=2048
