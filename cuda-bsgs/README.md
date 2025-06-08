@@ -1,5 +1,7 @@
 # CUDA Implementation of Baby-Step Giant-Step Algorithm
 
+**IMPORTANT NOTE:** For the most up-to-date and comprehensive instructions on building, running, and configuring this project, please refer to the main `README.md` file in the root directory of this repository. This current file provides a general overview but might not reflect all specific command-line options or the recommended `build.sh` script usage.
+
 This repository contains a CUDA-based implementation of the Baby-Step Giant-Step (BSGS) algorithm, an efficient method for solving the discrete logarithm problem.
 
 ## Table of Contents
@@ -90,4 +92,3 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-```
