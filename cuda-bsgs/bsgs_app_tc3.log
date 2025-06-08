@@ -1,0 +1,21 @@
+2025-06-08 08:56:49 [DEBUG] Initialized 1 mock GPUs.
+2025-06-08 08:56:49 [DEBUG] Attempting to load GPU profiles from: configs/gpu_profiles.json
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_Old_GPU' (SM: 7, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_Mid_GPU' (SM: 8, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Successfully Parsed and Stored profile: 'Mock_New_GPU' (SM: 9, Loaded: T)
+2025-06-08 08:56:49 [INFO]  Load_gpu_profiles: 3 valid profiles loaded in total.
+2025-06-08 08:56:49 [INFO]  Collider-BSGS Host Application Started.
+2025-06-08 08:56:49 [INFO]  Log level set to: DEBUG
+2025-06-08 08:56:49 [INFO]  Target Public Key (first 4 bytes): cc000000...
+[Checkpoint] Loaded from bsgs_checkpoint.dat. Resume offset 200000
+2025-06-08 08:56:49 [INFO]  Selected 1 GPU(s).
+2025-06-08 08:56:49 [DEBUG] Total profiles successfully parsed by load_gpu_profiles: 3
+2025-06-08 08:56:49 [INFO]  Processing for GPU ID 0: MockGPU-0-SM7.0 (SM 7.0)
+2025-06-08 08:56:49 [DEBUG]   Attempting to apply profile for GPU 0. Forced profile name: 'Mock_New_GPU'
+2025-06-08 08:56:49 [DEBUG]     Attempting FORCED profile match.
+2025-06-08 08:56:49 [DEBUG]       Checking forced: Profile.name:'Mock_Old_GPU' (len:12, hex:4d6f636b5f4f6c645f475055) vs ForcedName:'Mock_New_GPU' (len:12, hex:4d6f636b5f4e65775f475055). NameMatch=F. ParamsLoaded=T
+2025-06-08 08:56:49 [DEBUG]       Checking forced: Profile.name:'Mock_Mid_GPU' (len:12, hex:4d6f636b5f4d69645f475055) vs ForcedName:'Mock_New_GPU' (len:12, hex:4d6f636b5f4e65775f475055). NameMatch=F. ParamsLoaded=T
+2025-06-08 08:56:49 [DEBUG]       Checking forced: Profile.name:'Mock_New_GPU' (len:12, hex:4d6f636b5f4e65775f475055) vs ForcedName:'Mock_New_GPU' (len:12, hex:4d6f636b5f4e65775f475055). NameMatch=T. ParamsLoaded=T
+2025-06-08 08:56:49 [INFO]    GPU ID 0: Applied FORCED profile 'Mock_New_GPU'
+2025-06-08 08:56:49 [INFO]      Using Profile Params: w=96, htsz_mb=4096
+2025-06-08 08:56:49 [INFO]  BSGS process completed.
