@@ -118,19 +118,11 @@ cudaError_t cudaDeviceSynchronize() {
     return cudaSuccess;
 }
 
-#endif // BUILD_WITH_CUDA (End of large stub block)
-
-
 // This current_mock_device_id_stub is used by cudaMemGetInfo stub,
-// which is also guarded by #ifndef BUILD_WITH_CUDA.
-// It's defined globally for convenience if cudaMemGetInfo is called outside main stub block.
-#ifndef BUILD_WITH_CUDA
+// and is now part of the larger conditional block.
 int current_mock_device_id_stub = -1;
-#endif
 
-// cudaMemGetInfo is already individually guarded, which is fine.
-// If it were not, it should be included in the large block above.
-#ifndef BUILD_WITH_CUDA
+// cudaMemGetInfo is now part of the larger conditional block.
 cudaError_t cudaMemGetInfo(size_t* free_mem, size_t* total_mem) {
     if (!free_mem || !total_mem) return cudaErrorInvalidValue;
     if (current_mock_device_id_stub >= 0 && current_mock_device_id_stub < mock_gpu_count) {
@@ -145,7 +137,8 @@ cudaError_t cudaMemGetInfo(size_t* free_mem, size_t* total_mem) {
                            ": Free=" + std::to_string(*free_mem / (1024*1024)) + "MB, Total=" + std::to_string(*total_mem / (1024*1024)) + "MB");
     return cudaSuccess;
 }
-#endif
+
+#endif // BUILD_WITH_CUDA (End of new larger stub block)
 
 // launch_bsgs_kernel_stub is NOT a CUDA API stub, it's a specific helper for this project.
 // So it should remain outside the #ifndef BUILD_WITH_CUDA block for stubs.
